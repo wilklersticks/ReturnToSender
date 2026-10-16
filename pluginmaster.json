@@ -3,7 +3,7 @@
     "Author": "YOUR PSEUDONYM",
     "Name": "Return to Sender",
     "InternalName": "ReturnToSender",
-    "AssemblyVersion": "0.1.0.0",
+    "AssemblyVersion": "0.1.1.0",
     "Description": "A small box listing everyone who has recently emoted at you (/dote, /hug, /pet and more), even when they use motion-only emotes or chat messages are hidden.\r\nEmotes you haven't returned stay highlighted. Click \"Return\" to target that person and send the same emote back.",
     "ApplicableVersion": "any",
     "Tags": [
@@ -20,14 +20,14 @@
     "LoadPriority": 0,
     "Punchline": "See who emoted at you, and send it back in one click.",
     "AcceptsFeedback": true,
-    "IconUrl": "https://raw.githubusercontent.com/wilklersticks/ReturnToSender/main/images/icon.png",
-    "DownloadLinkInstall": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip",
-    "Changelog": "Update build.yml",
-    "DownloadLinkTesting": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip",
-    "IsTestingExclusive": false,
-    "LastUpdate": 1792121879,
     "IsHide": false,
-    "RepoUrl": "https://github.com/wilklersticks/ReturnToSender"
+    "IsTestingExclusive": false,
+    "IconUrl": "https://raw.githubusercontent.com/wilklersticks/ReturnToSender/main/images/icon.png",
+    "Changelog": "Add files via upload",
+    "DownloadLinkUpdate": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip",
+    "RepoUrl": "https://github.com/wilklersticks/ReturnToSender",
+    "DownloadLinkTesting": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip",
+    "LastUpdate": 1792122549,
+    "DownloadLinkInstall": "https://github.com/wilklersticks/ReturnToSender/releases/latest/download/latest.zip"
   }
 ]
