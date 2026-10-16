@@ -24,8 +24,7 @@ public sealed class Returner
 
         // Fall back to a name search in case their object ID changed (e.g. they re-entered range).
         foreach (var o in Plugin.ObjectTable)
-            if (o.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player &&
-                o.Name.TextValue == entry.SenderName)
+            if (o is Dalamud.Game.ClientState.Objects.SubKinds.IPlayerCharacter && o.Name.TextValue == entry.SenderName)
             {
                 entry.SenderId = o.GameObjectId;
                 return o;
