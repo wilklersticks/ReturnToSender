@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+  <PropertyGroup>
+    <!-- Starting version only. After the first release, the build bumps it automatically
+         from your commit messages (see .github/workflows/build.yml). -->
+    <Version>0.1.0</Version>
+    <Author>YOUR PSEUDONYM</Author>
+    <Name>Return to Sender</Name>
+    <Punchline>See who emoted at you, and send it back in one click.</Punchline>
+    <Description>A small box listing everyone who has recently emoted at you (/dote, /hug, /pet and more), even when they use motion-only emotes or chat messages are hidden.
+Emotes you haven't returned stay highlighted. Click "Return" to target that person and send the same emote back.</Description>
+    <Tags>emote;dote;social;roleplay;rp</Tags>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+</Project>
