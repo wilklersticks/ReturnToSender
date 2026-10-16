@@ -125,4 +125,22 @@ jobs:
           # The repo listing (pluginmaster.json) Dalamud reads.
           ConvertTo-Json -InputObject @($m) -Depth 10 | Set-Content pluginmaster.json -Encoding utf8
 
-          "## Return to Sender $env:VERSION"
+          "## Return to Sender $env:VERSION" >> $env:GITHUB_STEP_SUMMARY
+          "$env:NOTES" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "Your Dalamud repo URL: ``https://raw.githubusercontent.com/$repo/$branch/pluginmaster.json``" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v$env:VERSION" latest.zip --title "Return to Sender $env:VERSION" --notes "$env:NOTES" --latest
+
+      - name: Update pluginmaster.json
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pluginmaster.json
+          git commit -m "Update pluginmaster.json to $env:VERSION [skip ci]"
+          git push
