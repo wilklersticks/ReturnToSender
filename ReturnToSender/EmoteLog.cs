@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Lumina.Excel.Sheets;
 
 namespace ReturnToSender;
 
@@ -34,9 +33,30 @@ public sealed class EmoteLog
     public IReadOnlyList<EmoteEntry> Entries => entries;
     public int UnreturnedCount => entries.Count(e => !e.Returned);
 
+    /// <summary>Whether the current filter says this emote should be tracked.</summary>
+    public bool IsTracked(ushort emoteId) => config.FilterMode switch
+    {
+        EmoteFilterMode.DotesOnly => emoteId == EmoteCatalog.DoteId,
+        EmoteFilterMode.Custom => config.CustomEmotes.Contains(emoteId),
+        _ => true,
+    };
+
+    /// <summary>Short description of the filter for the box header, or null when tracking everything.</summary>
+    public string? FilterLabel => config.FilterMode switch
+    {
+        EmoteFilterMode.DotesOnly => "Dotes only",
+        EmoteFilterMode.Custom => config.CustomEmotes.Count == 1
+            ? $"Only {EmoteCatalog.Get(config.CustomEmotes[0])?.Name ?? "1 emote"}"
+            : $"{config.CustomEmotes.Count} chosen emotes",
+        _ => null,
+    };
+
     public void Add(IPlayerCharacter sender, ushort emoteId)
     {
-        var info = EmoteInfo(emoteId);
+        if (!IsTracked(emoteId))
+            return;
+
+        var info = EmoteCatalog.Get(emoteId);
         var name = sender.Name.TextValue;
         var world = sender.HomeWorld.ValueNullable?.Name.ExtractText() ?? string.Empty;
 
@@ -61,13 +81,16 @@ public sealed class EmoteLog
                 World = world,
                 SenderId = sender.GameObjectId,
                 EmoteId = emoteId,
-                EmoteName = info.Name,
-                Command = info.Command,
+                EmoteName = info?.Name ?? $"Emote #{emoteId}",
+                Command = info?.Command ?? string.Empty,
             });
         }
 
         Trim();
     }
+
+    /// <summary>Drop entries the current filter no longer tracks. Call after changing the filter.</summary>
+    public void ApplyFilter() => entries.RemoveAll(e => !IsTracked(e.EmoteId));
 
     public void MarkReturned(EmoteEntry entry)
     {
@@ -97,32 +120,7 @@ public sealed class EmoteLog
             entries.RemoveAt(entries.Count - 1);
     }
 
-    public static (string Name, string Command) EmoteInfo(ushort emoteId)
-    {
-        var row = Plugin.DataManager.GetExcelSheet<Emote>().GetRowOrDefault(emoteId);
-        if (row == null)
-            return ($"Emote #{emoteId}", string.Empty);
-
-        var name = row.Value.Name.ExtractText();
-        var command = row.Value.TextCommand.ValueNullable?.Command.ExtractText() ?? string.Empty;
-        return (string.IsNullOrWhiteSpace(name) ? $"Emote #{emoteId}" : name, command);
-    }
-
     /// <summary>True if <paramref name="command"/> is a real emote command like "/dote".</summary>
     public static bool IsEmoteCommand(string command)
-    {
-        command = command.Trim();
-        if (!command.StartsWith('/')) return false;
-
-        foreach (var row in Plugin.DataManager.GetExcelSheet<Emote>())
-        {
-            var tc = row.TextCommand.ValueNullable;
-            if (tc == null) continue;
-            if (string.Equals(tc.Value.Command.ExtractText(), command, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(tc.Value.Alias.ExtractText(), command, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(tc.Value.ShortCommand.ExtractText(), command, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
-    }
+        => command.Trim().StartsWith('/') && EmoteCatalog.FindByCommand(command) != null;
 }

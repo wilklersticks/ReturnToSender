@@ -53,15 +53,25 @@ public class BoxWindow : Window
         DrawToolbar();
         ImGui.Separator();
 
-        if (!plugin.Hook.IsValid)
+        if (plugin.Hook is { IsValid: false })
         {
             ImGui.TextColored(ImGuiColors.DalamudRed, "Emote detection failed to start (likely a game patch). See /xllog.");
             return;
         }
 
+        if (Config.FilterMode == EmoteFilterMode.Custom && Config.CustomEmotes.Count == 0)
+        {
+            ImGui.TextColored(ImGuiColors.DalamudOrange, "Your emote list is empty, so nothing is tracked.");
+            if (ImGui.SmallButton("Open settings"))
+                plugin.ToggleConfig();
+            return;
+        }
+
         if (Log.Entries.Count == 0)
         {
-            ImGui.TextDisabled("No one has emoted at you yet.");
+            ImGui.TextDisabled(Config.FilterMode == EmoteFilterMode.DotesOnly
+                ? "No one has doted on you yet."
+                : "No one has emoted at you yet.");
             return;
         }
 
@@ -84,6 +94,21 @@ public class BoxWindow : Window
         {
             if (ImGui.SmallButton("Clear"))
                 Log.Clear();
+        }
+
+        // Active filter, e.g. "Dotes only" (click to change)
+        var filter = Log.FilterLabel;
+        if (filter != null)
+        {
+            ImGui.SameLine();
+            ImGui.TextDisabled($"· {filter}");
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                ImGui.SetTooltip("Only these emotes are tracked. Click to change.");
+            }
+            if (ImGui.IsItemClicked())
+                plugin.ToggleConfig();
         }
 
         // Settings cog on the right
@@ -166,6 +191,16 @@ public class BoxWindow : Window
                 entry.Returned = false;
             if (ImGui.MenuItem("Remove from list"))
                 Log.Remove(entry);
+            if (Config.FilterMode == EmoteFilterMode.Custom)
+            {
+                ImGui.Separator();
+                if (ImGui.MenuItem($"Stop tracking {entry.EmoteName}"))
+                {
+                    Config.CustomEmotes.Remove(entry.EmoteId);
+                    Config.Save();
+                    Log.ApplyFilter();
+                }
+            }
             ImGui.EndPopup();
         }
     }

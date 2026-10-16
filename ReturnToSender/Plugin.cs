@@ -40,6 +40,11 @@ public sealed class Plugin : IDalamudPlugin
         EmoteLog = new EmoteLog(Configuration);
         Returner = new Returner(Configuration);
 
+        // Create the emote hook BEFORE any window can draw. The plugin starts on a background
+        // thread, so the UI can draw a frame before this constructor finishes.
+        Hook = new EmoteHook();
+        Hook.EmotedAtMe += OnEmotedAtMe;
+
         BoxWindow = new BoxWindow(this);
         ConfigWindow = new ConfigWindow(this);
         WindowSystem.AddWindow(BoxWindow);
@@ -48,17 +53,14 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "Show/hide the Return to Sender box. \"/rts config\" opens settings, \"/rts clear\" empties the list."
+            HelpMessage = "Show/hide the Return to Sender box. \"/rts config\" opens settings, \"/rts clear\" empties the list, " +
+                          "\"/rts filter all|dotes|custom\" chooses which emotes to track."
         });
 
         PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenMainUi += ToggleBox;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
         Framework.Update += OnFrameworkUpdate;
-
-        // Hook last, once everything it reports to exists.
-        Hook = new EmoteHook();
-        Hook.EmotedAtMe += OnEmotedAtMe;
     }
 
     public void Dispose()
@@ -88,7 +90,32 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        switch (args.Trim().ToLowerInvariant())
+        var a = args.Trim().ToLowerInvariant();
+
+        if (a.StartsWith("filter"))
+        {
+            var mode = a["filter".Length..].Trim() switch
+            {
+                "all" => EmoteFilterMode.All,
+                "dote" or "dotes" => EmoteFilterMode.DotesOnly,
+                "custom" or "list" or "mine" => EmoteFilterMode.Custom,
+                _ => (EmoteFilterMode?)null,
+            };
+
+            if (mode == null)
+            {
+                Chat.Print("Usage: /rts filter all | dotes | custom", "Return to Sender");
+                return;
+            }
+
+            Configuration.FilterMode = mode.Value;
+            Configuration.Save();
+            EmoteLog.ApplyFilter();
+            Chat.Print($"Now tracking: {EmoteLog.FilterLabel ?? "all emotes"}.", "Return to Sender");
+            return;
+        }
+
+        switch (a)
         {
             case "config":
             case "settings":
